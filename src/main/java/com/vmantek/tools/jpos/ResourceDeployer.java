@@ -224,7 +224,18 @@ public class ResourceDeployer implements ResourceDeployerX, Runnable
 
     private String getConfigProperty(String key)
     {
+        String v=getBuiltin(key);
+        if(v!=null)
+        {
+            return v;
+        }
         return config.get(key);
+    }
+
+    private String getBuiltin(String key)
+    {
+        if(key.equals("basedir")) return outputBase.getAbsolutePath();
+        return null;
     }
 
     private void readDeployerConfig() throws IOException

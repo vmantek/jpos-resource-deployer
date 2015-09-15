@@ -1,0 +1,22 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+group='com.vmantek.utils.jpos'
+version='1.0.0'
+
+repositories {
+    jcenter()
+    maven {url 'http://jpos.org/maven' }
+}
+
+dependencies {
+    compile ('org.jpos:jpos:2.0.2')
+    compile ('org.yaml:snakeyaml:1.16')
+    compile 'com.google.guava:guava:18.0'
+    compile 'org.freemarker:freemarker:[2.3.20,2.4)'
+    compile 'org.slf4j:slf4j-api:1.7.+'
+    testCompile ('org.slf4j:slf4j-simple:1.7.+')
+}

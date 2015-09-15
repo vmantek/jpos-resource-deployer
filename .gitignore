@@ -1,0 +1,27 @@
+*.swp
+# IDEA Ignores
+*.iml
+*.ipr
+*.iws
+.libs/
+.idea/
+out/
+# Eclipse Ignores
+.classpath
+.metadata
+.project
+.settings/
+target/
+Servers
+target
+# Gradle Ignores
+.gradle
+build
+/runtime
+/src/test
+/gradle
+/gradlew
+/gradlew.bat
+/cfg
+.attic
+

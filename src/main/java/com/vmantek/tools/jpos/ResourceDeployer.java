@@ -6,9 +6,14 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.TreeMultimap;
 import com.google.common.io.Resources;
 import freemarker.cache.StringTemplateLoader;
+import freemarker.ext.beans.BeansWrapper;
+import freemarker.ext.beans.MapModel;
 import freemarker.template.Configuration;
+import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
+import freemarker.template.TemplateModel;
+import freemarker.template.TemplateModelException;
 import org.jpos.q2.install.ModuleUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -190,6 +195,24 @@ public class ResourceDeployer implements ResourceDeployerX, Runnable
 
     private String filterText(String resource, String doc) throws IOException, TemplateException
     {
+        Set<String> keys = new HashSet<>();
+        BeansWrapper bw = new DefaultObjectWrapper();
+        MapModel mm = new MapModel(config, bw)
+        {
+            protected TemplateModel invokeGenericGet(Map keyMap,
+                                                     Class clazz,
+                                                     String key)
+                throws TemplateModelException
+            {
+                final TemplateModel tm = super.invokeGenericGet(keyMap, clazz, key);
+                if (tm != null)
+                {
+                    keys.add(key);
+                }
+                return tm;
+            }
+        };
+
         StringTemplateLoader loader = new StringTemplateLoader();
         loader.putTemplate(resource, doc, System.currentTimeMillis());
         Configuration c = new Configuration(Configuration.VERSION_2_3_23);
@@ -198,7 +221,8 @@ public class ResourceDeployer implements ResourceDeployerX, Runnable
         Template t = c.getTemplate(resource);
 
         StringWriter sw = new StringWriter();
-        t.process(config, sw);
+        t.process(mm, sw);
+        resourceProps.putAll(resource, keys);
         return sw.toString();
     }
 

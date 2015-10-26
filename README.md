@@ -64,6 +64,7 @@ to replace them at runtime with the contents of your properties.
 The following paths are excluded by default from filtering:
 
 - cfg/*.jks
+- cfg/*.ks
 - **/*.jpg
 - **/*.gif
 - **/*.png

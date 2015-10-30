@@ -238,7 +238,7 @@ public class ResourceDeployer implements ResourceDeployerX, Runnable
             if (val != null)
             {
                 m.appendReplacement(sb, val);
-                resourceProps.put(resource, key);
+                if(getBuiltin(key)==null) resourceProps.put(resource, key);
             }
         }
         m.appendTail(sb);
@@ -258,6 +258,10 @@ public class ResourceDeployer implements ResourceDeployerX, Runnable
 
     private String getBuiltin(String key)
     {
+        if(key.startsWith("env:") && key.trim().length()>4)
+        {
+            return System.getProperty(key.substring(4));
+        }
         if(key.equals("basedir")) return outputBase.getAbsolutePath();
         return null;
     }

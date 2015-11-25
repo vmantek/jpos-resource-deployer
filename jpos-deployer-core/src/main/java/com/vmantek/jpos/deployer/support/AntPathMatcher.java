@@ -1,4 +1,4 @@
-package com.vmantek.tools.jpos;
+package com.vmantek.jpos.deployer.support;
 
 /*
  * Copyright 2002-2015 the original author or authors.
@@ -79,21 +79,13 @@ public class AntPathMatcher
     private static final int CACHE_TURNOFF_THRESHOLD = 65536;
 
     private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\{[^/]+?\\}");
-
-
-    private String pathSeparator;
-
-    private PathSeparatorPatternCache pathSeparatorPatternCache;
-
-    private boolean caseSensitive = true;
-
-    private boolean trimTokens = true;
-
-    private volatile Boolean cachePatterns;
-
-    private final Map<String, String[]> tokenizedPatternCache = new ConcurrentHashMap<>(256);
-
     final Map<String, AntPathStringMatcher> stringMatcherCache = new ConcurrentHashMap<>(256);
+    private final Map<String, String[]> tokenizedPatternCache = new ConcurrentHashMap<>(256);
+    private String pathSeparator;
+    private PathSeparatorPatternCache pathSeparatorPatternCache;
+    private boolean caseSensitive = true;
+    private boolean trimTokens = true;
+    private volatile Boolean cachePatterns;
 
 
     /**

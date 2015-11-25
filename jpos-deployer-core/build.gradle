@@ -1,0 +1,6 @@
+dependencies {
+    compile 'org.jpos:jpos:2.0.2'
+    compile 'com.google.guava:guava:18.0'
+    compile 'org.freemarker:freemarker:[2.3.20,2.4)'
+    compile 'org.slf4j:slf4j-api:1.7.+'
+}

@@ -1,0 +1,4 @@
+dependencies {
+    compile project(':jpos-deployer-core')
+    compile 'org.springframework.boot:spring-boot-starter:1.3.0.RELEASE'
+}

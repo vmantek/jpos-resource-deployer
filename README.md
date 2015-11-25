@@ -35,11 +35,40 @@ Everything else lives inside the application.
 It's as simple as creating a new main class that starts Q2 with a code block similar to: 
 
 ```java
-    File tmpDir = Files.createTempDirectory("jpos-Q2").toAbsolutePath().toFile();
-    final ResourceDeployer deployer = ResourceDeployer.newInstance(tmpDir);
-    deployer.installRuntimeResources();
-    deployer.startConfigMonitoring();
-    new Q2(new File(tmpDir, "deploy").getAbsolutePath()).start();
+import com.vmantek.jpos.deployer.ResourceDeployer;
+import com.vmantek.jpos.deployer.simple.SimplePropertyResolver;
+import org.jpos.q2.Q2;
+
+import java.io.File;
+import java.nio.file.Files;
+
+public class Main
+{
+    public static void main(String[] args) throws Exception
+    {
+        File tmpDir = Files.createTempDirectory("jpos-Q2").toAbsolutePath().toFile();
+        SimplePropertyResolver propertyResolver=new SimplePropertyResolver(tmpDir);
+        final ResourceDeployer deployer = ResourceDeployer.newInstance(propertyResolver, tmpDir);
+        deployer.installRuntimeResources();
+        deployer.startConfigMonitoring();
+        ensureDirsExists("./log", "./db");
+        if(!new File("./cfg/config.properties").exists())
+        {
+            System.err.println("No cfg/config.properties file was found");
+            System.exit(1);
+        }
+        new Q2(new File(tmpDir, "deploy").getAbsolutePath()).start();
+    }
+
+    private static void ensureDirsExists(String ...dirs)
+    {
+        for (String dir : dirs)
+        {
+            File d=new File(dir);
+            if(!d.exists()) d.mkdirs();
+        }
+    }
+}
 ```
   
 At runtime, anything stored as a resource under META-INF/q2-runtime/ will get copied 
@@ -53,9 +82,6 @@ The deployer will read a configuration file at startup which by default points t
 relative to the working directory. This configuration is just a list of properties specific to your 
 application.
 
-You can set the CONFIG_FILE system property 
-to override the location of the config file within the filesystem.
- 
 ## Filtering
 
 You can use placeholders within your resources in the form of @@myProperty@@ or ${myProperty} 

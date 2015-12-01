@@ -2,38 +2,58 @@ plugins {
     id "com.jfrog.bintray" version "1.4"
 }
 
-group = 'com.vmantek.utils.jpos'
-version = '1.1'
-
 subprojects {
     apply plugin: 'com.jfrog.bintray'
     apply plugin: 'java'
     apply plugin: 'maven'
+    apply plugin: 'maven-publish'
+
+    group = 'com.vmantek.utils.jpos'
+    version = '1.1'
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
-
-    version = rootProject.version
 
     repositories {
         jcenter()
         maven { url 'http://jpos.org/maven' }
     }
 
+    task sourceJar(type: Jar) {
+        from sourceSets.main.allJava
+    }
+
+    publishing {
+        repositories {
+            maven {
+                url "$buildDir/repo"
+            }
+        }
+    	publications {
+    		mpub(MavenPublication) {
+    			from components.java
+
+                artifact sourceJar {
+                    classifier "sources"
+                }
+    		}
+    	}
+    }
+
     bintray {
         user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
         key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
-        configurations = ['archives']
+        publications = ['mpub']
         pkg {
             repo = 'maven'
-            name = rootProject.group
+            name = project.group
             userOrg = 'vmantek'
             licenses = ['Apache-2.0']
             vcsUrl = 'https://github.com/vmantek/jpos-resource-deployer.git'
             version {
-                name = rootProject.version
+                name = project.version
                 released = new Date()
-                vcsTag = rootProject.version
+                vcsTag = project.version
             }
         }
     }

@@ -115,10 +115,13 @@ public class SpringPropertyResolver implements PropertyResolver
         if (matcher.find())
         {
             final String uri = matcher.group(1);
-            Resource res= resourceLoader.getResource(uri);
-            if (res!=null)
+            if(uri.startsWith("file:"))
             {
-                return res.getFile().getAbsolutePath();
+                Resource res= resourceLoader.getResource(uri);
+                if (res!=null)
+                {
+                    return res.getFile().getAbsolutePath();
+                }
             }
         }
         return null;

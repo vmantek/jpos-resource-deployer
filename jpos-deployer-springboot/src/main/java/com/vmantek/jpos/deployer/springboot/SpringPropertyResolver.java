@@ -154,22 +154,37 @@ public class SpringPropertyResolver implements PropertyResolver
         return props;
     }
 
-    private void reloadPropertySources()
+    private synchronized void reloadPropertySources()
     {
         MutablePropertySources sources = environment.getPropertySources();
 
         for (PropertySource<?> source : sources)
         {
-            final Matcher matcher = pattern.matcher(source.getName());
+            final String name = source.getName();
+            final Matcher matcher = pattern.matcher(name);
             if (matcher.find())
             {
                 final String uri = matcher.group(1);
-                Resource res = resourceLoader.getResource(uri);
+                Resource res=resourceLoader.getResource(uri);
+                int cnt=20;
+                while(!res.exists())
+                {
+                    res=resourceLoader.getResource(uri);
+                    if(res.exists() || cnt--==0) break;
+                    try
+                    {
+                        Thread.sleep(200);
+                    }
+                    catch (InterruptedException ignored)
+                    {
+                    }
+                }
                 try
                 {
                     if (uri.startsWith("file:"))
                     {
-                        sources.replace(source.getName(), propertySourceLoader.load(res, source.getName(), null));
+                        final PropertySource<?> rload = propertySourceLoader.load(res, name, null);
+                        sources.replace(name, rload);
                     }
                 }
                 catch (IOException e)

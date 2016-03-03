@@ -313,69 +313,93 @@ public class ResourceDeployer implements Runnable
     @Override
     public void run()
     {
-        try
+        while(running)
         {
-            WatchService watcher = FileSystems.getDefault().newWatchService();
-            Set<String> trackedSources = propertyResolver.getTrackedSources();
-            List<Path> files = new ArrayList<>();
-            Set<Path> dirs = new HashSet<>();
-            for (String trackedSource : trackedSources)
+            WatchService watcher=null;
+            try
             {
-                final File file = new File(trackedSource);
-                if (file.exists())
+                watcher = FileSystems.getDefault().newWatchService();
+                Set<String> trackedSources = propertyResolver.getTrackedSources();
+                List<Path> files = new ArrayList<>();
+                Set<Path> dirs = new HashSet<>();
+                for (String trackedSource : trackedSources)
                 {
-                    dirs.add(file.getParentFile().toPath());
-                    files.add(file.toPath());
+                    final File file = new File(trackedSource);
+                    if (file.exists())
+                    {
+                        dirs.add(file.getParentFile().toPath());
+                        files.add(file.toPath());
+                    }
+                }
+                for (Path dir : dirs)
+                {
+                    dir.register(watcher, new WatchEvent.Kind[]{ENTRY_MODIFY, ENTRY_DELETE, ENTRY_CREATE},
+                                 SensitivityWatchEventModifier.HIGH);
+                }
+
+                while (running)
+                {
+                    WatchKey key;
+                    try
+                    {
+                        key = watcher.take();
+                    }
+                    catch (InterruptedException ignored)
+                    {
+                        break;
+                    }
+
+                    for (WatchEvent<?> event : key.pollEvents())
+                    {
+                        WatchEvent.Kind<?> kind = event.kind();
+                        if (kind == OVERFLOW)
+                        {
+                            continue;
+                        }
+                        Path dir = (Path)key.watchable();
+                        Path filename = ((WatchEvent<Path>) event).context();
+                        Path path = dir.resolve(filename);
+
+                        if(files.contains(path))
+                        {
+                            Set<String> affectedResources = propertyResolver.scanPropertyChanges(resourceProps);
+                            for (String resource : affectedResources)
+                            {
+                                installResource(resource, true);
+                            }
+                        }
+                    }
+                    boolean valid = key.reset();
+                    if (!valid)
+                    {
+                        break;
+                    }
                 }
             }
-            for (Path dir : dirs)
+            catch (Throwable e)
             {
-                dir.register(watcher, new WatchEvent.Kind[]{ENTRY_MODIFY, ENTRY_DELETE, ENTRY_CREATE},
-                             SensitivityWatchEventModifier.HIGH);
-            }
-
-            while (running)
-            {
-                WatchKey key;
+                log.error("Oops", e);
                 try
                 {
-                    key = watcher.take();
+                    Thread.sleep(5000);
                 }
                 catch (InterruptedException ignored)
                 {
-                    break;
-                }
-
-                for (WatchEvent<?> event : key.pollEvents())
-                {
-                    WatchEvent.Kind<?> kind = event.kind();
-                    if (kind == OVERFLOW)
-                    {
-                        continue;
-                    }
-                    Path dir = (Path)key.watchable();
-                    Path filename = ((WatchEvent<Path>) event).context();
-                    Path path = dir.resolve(filename);
-
-                    if(files.contains(path))
-                    {
-                        Set<String> affectedResources = propertyResolver.scanPropertyChanges(resourceProps);
-                        for (String resource : affectedResources)
-                        {
-                            installResource(resource, true);
-                        }
-                    }
-                }
-                boolean valid = key.reset();
-                if (!valid)
-                {
-                    break;
                 }
             }
-        }
-        catch (IOException e)
-        {
-            log.error("I/O Error", e);
+            finally
+            {
+                if(watcher!=null)
+                {
+                    try
+                    {
+                        watcher.close();
+                    }
+                    catch (IOException ignored)
+                    {
+                    }
+                }
+            }
         }
     }
 }
